@@ -1,12 +1,12 @@
-export type Video = {
-    id: number;
+type Video = {
+    id?: number;
     title: string;
     author: string;
-    canBeDownloaded: boolean;
-    minAgeRestriction: number | null;  // Нужно учесть null
-    createdAt: string;  // В TypeScript тип Date хранится иначе, лучше использовать string
-    publicationDate: string;
-    availableResolutions: string[];  // Должен быть массив строк, а не один элемент
+    canBeDownloaded?: boolean;
+    minAgeRestriction?: number | null;  // Нужно учесть null
+    createdAt?: string;
+    publicationDate?: string;
+    availableResolutions: string[];
 };
 
 
