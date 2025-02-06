@@ -9,10 +9,6 @@
     { "src": "src/index.ts", "use": "@vercel/node" }
 
   ],
-
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }
-  ],
-
   "routes": [
 
     { "src": "/(.*)", "dest": "src/index.ts" }

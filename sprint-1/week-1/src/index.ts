@@ -1,6 +1,5 @@
 import express from "express"
 import {Request, Response} from "express"
-import bodyParser from 'body-parser'
 
 
 const app = express();
@@ -32,8 +31,7 @@ export let videos: Video[] = [
     }
 ]
 
-const parserMiddleware = bodyParser({})
-app.use(parserMiddleware)
+app.use(express.json());
 
 app.get("/videos", (_, response: Response): void => {
     if (videos.length > 0) {
