@@ -8,12 +8,13 @@ const app = express();
 const parser = bodyParser.json();
 app.use(parser)
 
+const validResolutions = ["P144", "P240", "P360", "P480", "P720", "P1080", "P1440", "P2160"];
+const isValidResolution = (resolutions: string[]) => {
+    return resolutions.every(res => validResolutions.includes(res));
+}
+
 app.get("/videos", (_, response: Response): void => {
-    if (videos.length > 0) {
-        response.status(200).send(videos);  // Сначала статус, потом отправка
-    } else {
-        response.status(404).send({});
-    }
+        response.status(200).send(videos);
 });
 app.get(`/videos/:id`, (request: Request, response: Response): void => {
     const videoId:number = +request.params.id;
@@ -31,27 +32,29 @@ app.get(`/videos/:id`, (request: Request, response: Response): void => {
         response.status(404).send({});
     }
 });
-app.put("/videos/:id",(request:Request, response:Response):void=> {
+app.put("/videos/:id", (request: Request, response: Response): void => {
     let ReqTitle: string = request.body.title;
     let ReqAuthor: string = request.body.author;
-    let ReqResolution: string []= request.body.availableResolutions;
+    let ReqResolution: string[] = request.body.availableResolutions;
     let ReqMinAgeRestriction: number | null = request.body.minAgeRestriction;
 
-    if(typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
+    if (
+        typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
         typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
         !Array.isArray(ReqResolution) || ReqResolution.length === 0 ||
+        !isValidResolution(ReqResolution) ||  // Валидация доступных разрешений
         (ReqMinAgeRestriction !== null && (typeof ReqMinAgeRestriction !== 'number' || ReqMinAgeRestriction < 1 || ReqMinAgeRestriction > 18))
     ) {
         response.status(400).send({
-            errorsMessage:[{
-                "message": "Incorrect title",
-                "field": "title/author/resolutions/minAgeRestriction"
+            errorsMessage: [{
+                "message": "Incorrect title/author/availableResolutions/minAgeRestriction",
+                "field": "title/author/availableResolutions/minAgeRestriction"
             }],
         });
         return;
     }
 
-    let updateVideoInfo = videos.find(item=> item.id === +request.params.id)
+    let updateVideoInfo = videos.find(item => item.id === +request.params.id)
     if (updateVideoInfo) {
         updateVideoInfo.title = ReqTitle;
         updateVideoInfo.author = ReqAuthor;
@@ -62,22 +65,23 @@ app.put("/videos/:id",(request:Request, response:Response):void=> {
         response.status(200).send(updateVideoInfo);
         return;
     }
-    response.status(404).send({})
-})
+    response.status(404).send({});
+});
+
 app.post("/videos", (request: Request, response: Response): void => {
     let ReqTitle: string = request.body.title;
     let ReqAuthor: string = request.body.author;
     let ReqResolution: string[] = request.body.availableResolutions;
 
-
     if (
         typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
         typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
-        !Array.isArray(ReqResolution) || ReqResolution.length === 0
+        !Array.isArray(ReqResolution) || ReqResolution.length === 0 ||
+        !isValidResolution(ReqResolution)  // Валидация доступных разрешений
     ) {
         response.status(400).send({
             errorsMessage: [{
-                "message": "Incorrect title/author/resolutions",
+                "message": "Incorrect title/author/availableResolutions",
                 "field": "title/author/availableResolutions"
             }],
         });
@@ -91,13 +95,14 @@ app.post("/videos", (request: Request, response: Response): void => {
         canBeDownloaded: request.body.canBeDownloaded ?? false,
         minAgeRestriction: request.body.minAgeRestriction ?? null,
         createdAt: new Date().toISOString(),
-        publicationDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),  // добавляем сутки к текущей дате
+        publicationDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         availableResolutions: ReqResolution
     };
 
     videos.push(newVideo);
     response.status(201).send(newVideo);
 });
+
 app.delete(`/videos/:id`, (request: Request, response: Response): void => {
     for (let i: number = 0; i < videos.length; i++) {
         if (videos[i].id === +request.params.id) {
