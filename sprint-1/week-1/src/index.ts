@@ -10,7 +10,7 @@ app.use(bodyParser.json())
 const VALID_RESOLUTIONS: string[] = ["P144", "P240", "P360", "P480", "P720", "P1080", "P1440", "P2160"];
 
 /*Return all videos*/
-app.get("/videos",(request:Request, response:Response):void => {
+app.get("/videos",(_, response:Response):void => {
     if(videos.length > 0){
         response.status(200).send(videos);
     }
@@ -31,10 +31,10 @@ app.put("/videos/:id",(request:Request, response:Response):void=> {
     let ReqResolution: string = request.body.availableResolutions;
     let ReqMinAgeRestriction: string = request.body.minAgeRestriction;
 
-    if(!ReqTitle || typeof ReqTitle !== 'string' || !ReqTitle.trim()|| ReqTitle.length>40 ||
-        !ReqAuthor || typeof ReqAuthor !== 'string' || !ReqAuthor.trim()|| ReqAuthor.length>20 ||
+    if(!ReqTitle || ReqTitle !== 'string' || !ReqTitle.trim()|| ReqTitle.length>40 ||
+        !ReqAuthor || ReqAuthor !== 'string' || !ReqAuthor.trim()|| ReqAuthor.length>20 ||
         !Array.isArray(ReqResolution) || !ReqResolution.every(r => VALID_RESOLUTIONS.includes(r)) ||
-        typeof ReqMinAgeRestriction !== "number" || ReqMinAgeRestriction < 1 || ReqMinAgeRestriction > 18)
+        ReqMinAgeRestriction !== "number" || +ReqMinAgeRestriction < 1 || +ReqMinAgeRestriction > 18)
 
     {
         response.status(400).send({
@@ -67,8 +67,8 @@ app.post("/videos",(request:Request, response:Response):void=> {
     let ReqAuthor: string = request.body.author;
     let ReqResolution: string = request.body.availableResolutions;
 
-    if(!ReqTitle || typeof ReqTitle !== 'string' || !ReqTitle.trim()|| ReqTitle.length>40 ||
-        !ReqAuthor || typeof ReqAuthor !== 'string' || !ReqAuthor.trim()|| ReqAuthor.length>20
+    if(!ReqTitle ||  ReqTitle !== 'string' || !ReqTitle.trim()|| ReqTitle.length>40 ||
+        !ReqAuthor || ReqAuthor !== 'string' || !ReqAuthor.trim()|| ReqAuthor.length>20
         || ReqResolution.length<0)
     {
         response.status(400).send({
