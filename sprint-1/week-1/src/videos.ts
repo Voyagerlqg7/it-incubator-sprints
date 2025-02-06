@@ -6,7 +6,7 @@ type Video = {
     minAgeRestriction?: number | null;  // Нужно учесть null
     createdAt?: string;
     publicationDate?: string;
-    availableResolutions?: string[];
+    availableResolutions: string[];
 };
 
 export let videos: Video[] = [

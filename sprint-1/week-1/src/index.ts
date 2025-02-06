@@ -8,79 +8,112 @@ const app = express();
 const parser = bodyParser.json();
 app.use(parser)
 
-const validResolutions = ["P144", "P240", "P360", "P480", "P720", "P1080", "P1440", "P2160"];
-const isValidResolution = (resolutions: string[]) => {
-    return resolutions.every(res => validResolutions.includes(res));
-}
-
 app.get("/videos", (_, response: Response): void => {
-        response.send(videos);
-});
-app.get(`/videos/:videoid`, (request: Request, response: Response): void => {
-    const id = +request.params.videoid;
-    const video = videos.find(item => item.id === id);
-    if (video) {
-        response.status(200).send(video);
+    if (videos.length > 0) {
+        response.status(200).send(videos);  // Сначала статус, потом отправка
     } else {
         response.status(404).send({});
     }
 });
-app.put("/videos/:videoid", (request: Request, response: Response): void => {
-    let title = request.body.title
-    if(!title || typeof title !=='string'|| !title.trim()|| title.length>40) {
-        response.status(400).send({
-            errorsMessages:[{
-                "message": "Invalid title",
-                "field" : "title"
-            }]
-        })
+app.get("/videos/:id", (request: Request, response: Response): void => {
+    const videoId:number = +request.params.id;
+
+    if (isNaN(videoId)) {
+        response.status(400).send({});
         return;
     }
-    const id = +request.params.videoid;
-    const video = videos.find(item => item.id === id);
-    if(video){
-        video.title = title;
-        response.status(204).send(video)
-    }
-    else{
-        response.send(404)
+
+    let specificVideo = videos.find(item => item.id === videoId);
+
+    if (specificVideo) {
+        response.status(200).send(specificVideo);
+    } else {
+        response.status(404).send({});
     }
 });
-app.post("/videos", (request: Request, response: Response): void => {
-    let title = request.body.title
-    if(!title || typeof title !=='string'|| !title.trim()|| title.length>40) {
+app.put("/videos/:id",(request:Request, response:Response):void=> {
+    let ReqTitle: string = request.body.title;
+    let ReqAuthor: string = request.body.author;
+    let ReqResolution: string []= request.body.availableResolutions;
+    let ReqMinAgeRestriction: number | null = request.body.minAgeRestriction;
+
+    if(typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
+        typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
+        !Array.isArray(ReqResolution) || ReqResolution.length === 0 ||
+        (ReqMinAgeRestriction !== null && (typeof ReqMinAgeRestriction !== 'number' || ReqMinAgeRestriction < 1 || ReqMinAgeRestriction > 18))
+    ) {
         response.status(400).send({
-            errorsMessages:[{
-                "message": "Invalid title",
-                "field" : "title"
-            }]
-        })
+            errorsMessage:[{
+                "message": "Incorrect title",
+                "field": "title/author/resolutions/minAgeRestriction"
+            }],
+        });
         return;
     }
-    const newVideo = {
-        id:+(new Date()),
-        title:title,
-        author: 'new author'
+
+    let updateVideoInfo = videos.find(item=> item.id === +request.params.id)
+    if (updateVideoInfo) {
+        updateVideoInfo.title = ReqTitle;
+        updateVideoInfo.author = ReqAuthor;
+        updateVideoInfo.availableResolutions = ReqResolution;
+        updateVideoInfo.canBeDownloaded = request.body.canBeDownloaded;
+        updateVideoInfo.minAgeRestriction = ReqMinAgeRestriction;
+        updateVideoInfo.publicationDate = request.body.publicationDate;
+        response.status(200).send(updateVideoInfo);
+        return;
     }
-    videos.push(newVideo)
+    response.status(404).send({})
+})
+app.post("/videos", (request: Request, response: Response): void => {
+    let ReqTitle: string = request.body.title;
+    let ReqAuthor: string = request.body.author;
+    let ReqResolution: string[] = request.body.availableResolutions;
+
+
+    if (
+        typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
+        typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
+        !Array.isArray(ReqResolution) || ReqResolution.length === 0
+    ) {
+        response.status(400).send({
+            errorsMessage: [{
+                "message": "Incorrect title/author/resolutions",
+                "field": "title/author/availableResolutions"
+            }],
+        });
+        return;
+    }
+
+    const newVideo = {
+        id: +(new Date()),
+        title: ReqTitle,
+        author: ReqAuthor,
+        canBeDownloaded: request.body.canBeDownloaded ?? false,
+        minAgeRestriction: request.body.minAgeRestriction ?? null,
+        createdAt: new Date().toISOString(),
+        publicationDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),  // добавляем сутки к текущей дате
+        availableResolutions: ReqResolution
+    };
+
+    videos.push(newVideo);
     response.status(201).send(newVideo);
 });
-app.delete(`/videos/:id`, (request: Request, response: Response): void => {
-        const id = +request.params.id
-        const newVideos = videos.filter(item => item.id !== id)
-        if (newVideos.length < videos.length) {
-            videos.push(...newVideos);
-            response.send(204)
-        } else {
-            response.send(404);
+app.delete("/videos/:id", (request: Request, response: Response): void => {
+    for (let i: number = 0; i < videos.length; i++) {
+        if (videos[i].id === +request.params.id) {
+            videos.splice(i, 1);
+            response.status(204).send();
+            return;
         }
-    });
+    }
+    response.status(404).send({});
+});
 app.delete("/testing/all-data", (request: Request, response: Response): void => {
     if (videos.length > 0) {
         videos.length = 0;
         response.status(204).send();
     } else {response.status(204).send();}
-})
+});
 
 app.listen(SETTINGS.PORT, () => {
     console.log('...server started in port ' + SETTINGS.PORT)
