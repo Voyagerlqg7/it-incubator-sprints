@@ -5,6 +5,7 @@ import {videos} from "./videos";
 import {Video} from "./videos";
 
 const app = express();
+app.use(express.json());
 
 /*Return all videos*/
 app.get("/hometask_01/api/videos",(request:Request, response:Response):void => {
@@ -14,7 +15,7 @@ app.get("/hometask_01/api/videos",(request:Request, response:Response):void => {
     else{response.status(404);}
 })
 /*Get by ID*/
-app.get(`/hometask_02/api/videos/:id`,(request:Request, response:Response):void => {
+app.get(`/hometask_01/api/videos/:id`,(request:Request, response:Response):void => {
     let specificVideo = videos.find(item=> item.id === +request.params.id);
     if(specificVideo){
         response.status(200).send(specificVideo);
@@ -24,6 +25,23 @@ app.get(`/hometask_02/api/videos/:id`,(request:Request, response:Response):void 
 })
 app.put("/hometask_01/api/videos",(request:Request, response:Response):void=> {
 
+})
+app.post("/hometask_01/api/videos",(request:Request, response:Response):void=> {
+    let ReqTitle:string = request.body.title;
+    if(!ReqTitle || typeof ReqTitle !== string || ReqTitle.trim()) {
+        response.status(400).send({errorsMessage:[{
+                "message": "Incorrect title",
+                "field": "title"
+            }]
+        });
+    }
+    const newVideo = {
+            id: +(new Date()),
+            title: request.body.title,
+            author: request.body.author
+    }
+    videos.push(newVideo);
+    response.status(201).send(newVideo);
 })
 
 /*Delete by ID*/
