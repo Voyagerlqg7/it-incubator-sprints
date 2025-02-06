@@ -14,111 +14,73 @@ const isValidResolution = (resolutions: string[]) => {
 }
 
 app.get("/videos", (_, response: Response): void => {
-        response.status(200).send(videos);
+        response.send(videos);
 });
-app.get(`/videos/:id`, (request: Request, response: Response): void => {
-    const videoId:number = +request.params.id;
-
-    if (isNaN(videoId)) {
-        response.status(400).send({});
-        return;
-    }
-
-    let specificVideo = videos.find(item => item.id === videoId);
-
-    if (specificVideo) {
-        response.status(200).send(specificVideo);
+app.get(`/videos/:videoid`, (request: Request, response: Response): void => {
+    const id = +request.params.videoid;
+    const video = videos.find(item => item.id === id);
+    if (video) {
+        response.status(200).send(video);
     } else {
         response.status(404).send({});
     }
 });
-app.put("/videos/:id", (request: Request, response: Response): void => {
-    let ReqTitle: string = request.body.title;
-    let ReqAuthor: string = request.body.author;
-    let ReqResolution: string[] = request.body.availableResolutions;
-    let ReqMinAgeRestriction: number | null = request.body.minAgeRestriction;
-
-    if (
-        typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
-        typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
-        !Array.isArray(ReqResolution) || ReqResolution.length === 0 ||
-        !isValidResolution(ReqResolution) ||  // Валидация доступных разрешений
-        (ReqMinAgeRestriction !== null && (typeof ReqMinAgeRestriction !== 'number' || ReqMinAgeRestriction < 1 || ReqMinAgeRestriction > 18))
-    ) {
+app.put("/videos/:videoid", (request: Request, response: Response): void => {
+    let title = request.body.title
+    if(!title || typeof title !=='string'|| !title.trim()|| title.length>40) {
         response.status(400).send({
-            errorsMessage: [{
-                "message": "Incorrect title/author/availableResolutions/minAgeRestriction",
-                "field": "title/author/availableResolutions/minAgeRestriction"
-            }],
-        });
+            errorsMessages:[{
+                "message": "Invalid title",
+                "field" : "title"
+            }]
+        })
         return;
     }
-
-    let updateVideoInfo = videos.find(item => item.id === +request.params.id)
-    if (updateVideoInfo) {
-        updateVideoInfo.title = ReqTitle;
-        updateVideoInfo.author = ReqAuthor;
-        updateVideoInfo.availableResolutions = ReqResolution;
-        updateVideoInfo.canBeDownloaded = request.body.canBeDownloaded;
-        updateVideoInfo.minAgeRestriction = ReqMinAgeRestriction;
-        updateVideoInfo.publicationDate = request.body.publicationDate;
-        response.status(200).send(updateVideoInfo);
-        return;
+    const id = +request.params.videoid;
+    const video = videos.find(item => item.id === id);
+    if(video){
+        video.title = title;
+        response.status(204).send(video)
     }
-    response.status(404).send({});
+    else{
+        response.send(404)
+    }
 });
-
 app.post("/videos", (request: Request, response: Response): void => {
-    let ReqTitle: string = request.body.title;
-    let ReqAuthor: string = request.body.author;
-    let ReqResolution: string[] = request.body.availableResolutions;
-
-    if (
-        typeof ReqTitle !== 'string' || !ReqTitle.trim() || ReqTitle.length > 40 ||
-        typeof ReqAuthor !== 'string' || !ReqAuthor.trim() || ReqAuthor.length > 20 ||
-        !Array.isArray(ReqResolution) || ReqResolution.length === 0 ||
-        !isValidResolution(ReqResolution)  // Валидация доступных разрешений
-    ) {
+    let title = request.body.title
+    if(!title || typeof title !=='string'|| !title.trim()|| title.length>40) {
         response.status(400).send({
-            errorsMessage: [{
-                "message": "Incorrect title/author/availableResolutions",
-                "field": "title/author/availableResolutions"
-            }],
-        });
+            errorsMessages:[{
+                "message": "Invalid title",
+                "field" : "title"
+            }]
+        })
         return;
     }
-
     const newVideo = {
-        id: +(new Date()),
-        title: ReqTitle,
-        author: ReqAuthor,
-        canBeDownloaded: request.body.canBeDownloaded ?? false,
-        minAgeRestriction: request.body.minAgeRestriction ?? null,
-        createdAt: new Date().toISOString(),
-        publicationDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        availableResolutions: ReqResolution
-    };
-
-    videos.push(newVideo);
+        id:+(new Date()),
+        title:title,
+        author: 'new author'
+    }
+    videos.push(newVideo)
     response.status(201).send(newVideo);
 });
-
 app.delete(`/videos/:id`, (request: Request, response: Response): void => {
-    for (let i: number = 0; i < videos.length; i++) {
-        if (videos[i].id === +request.params.id) {
-            videos.splice(i, 1);
-            response.status(204).send();
-            return;
+        const id = +request.params.id
+        const newVideos = videos.filter(item => item.id !== id)
+        if (newVideos.length < videos.length) {
+            videos.push(...newVideos);
+            response.send(204)
+        } else {
+            response.send(404);
         }
-    }
-    response.status(404).send({});
-});
+    });
 app.delete("/testing/all-data", (request: Request, response: Response): void => {
     if (videos.length > 0) {
         videos.length = 0;
         response.status(204).send();
     } else {response.status(204).send();}
-});
+})
 
 app.listen(SETTINGS.PORT, () => {
     console.log('...server started in port ' + SETTINGS.PORT)
