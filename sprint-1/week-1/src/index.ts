@@ -1,12 +1,39 @@
 import express from "express"
 import {Request, Response} from "express"
-import {SETTINGS} from './settings';
-import {videos} from "./videos";
 import bodyParser from 'body-parser'
 
+
 const app = express();
-const parser = bodyParser.json();
-app.use(parser)
+const port = process.env.PORT || 6419
+
+
+type Video = {
+    id?: number;
+    title: string;
+    author: string;
+    canBeDownloaded?: boolean;
+    minAgeRestriction?: number | null;  // Нужно учесть null
+    createdAt?: string;
+    publicationDate?: string;
+    availableResolutions: string[];
+};
+export let videos: Video[] = [
+    {
+        id: 0,
+        title: "some title",
+        author: "some author",
+        canBeDownloaded: true,
+        minAgeRestriction: null,
+        createdAt: "2025-02-06T21:21:53.110Z",
+        publicationDate: "2025-02-06T21:21:53.110Z",
+        availableResolutions: [
+            "P144"
+        ]
+    }
+]
+
+const parserMiddleware = bodyParser({})
+app.use(parserMiddleware)
 
 app.get("/videos", (_, response: Response): void => {
     if (videos.length > 0) {
@@ -115,6 +142,6 @@ app.delete("/testing/all-data", (request: Request, response: Response): void => 
     } else {response.status(204).send();}
 });
 
-app.listen(SETTINGS.PORT, () => {
-    console.log('...server started in port ' + SETTINGS.PORT)
+app.listen(port, () => {
+    console.log('Example app listening on port', port);
 })
