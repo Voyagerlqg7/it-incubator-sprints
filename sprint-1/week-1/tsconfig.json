@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
+    "target": "ES6",
+    "module": "CommonJS",
+    "rootDir": "./src",
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
