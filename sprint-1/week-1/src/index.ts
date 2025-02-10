@@ -1,6 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
-import { Request, Response } from "express";
+import { Request,Response } from "express";
+import {Video} from "./VideosDB";
+import {videos} from "./VideosDB"
 
 dotenv.config();
 const app = express();
@@ -8,45 +10,37 @@ const port = process.env.PORT || 6419;
 
 app.use(express.json());
 
-
-
-type Video = {
-    id?: number;
-    title: string;
-    author: string;
-    canBeDownloaded?: boolean;
-    minAgeRestriction?: number | null;
-    createdAt?: string;
-    publicationDate?: string;
-    availableResolutions: string[];
-};
-
-export let videos: Video[] = [
-    {
-        id: 0,
-        title: "some title",
-        author: "some author",
-        canBeDownloaded: true,
-        minAgeRestriction: null,
-        createdAt: "2025-02-06T21:21:53.110Z",
-        publicationDate: "2025-02-06T21:21:53.110Z",
-        availableResolutions: ["P144"],
-    },
-];
-
-const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
+const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: { message: string; field: string }[] } => {
+    const errors: { message: string; field: string }[] = [];
     const validResolutions = ["P144", "P240", "P360", "P480", "P720", "P1080", "P1440", "P2160"];
 
-    if (!video.title || typeof video.title !== "string" || video.title.length > 40) errors.push("Incorrect title");
-    if (!video.author || typeof video.author !== "string" || video.author.length > 20) errors.push("Incorrect author");
-    if (!video.availableResolutions || !Array.isArray(video.availableResolutions)) errors.push("Incorrect resolutions");
-    if (video.availableResolutions && video.availableResolutions.some(res => !validResolutions.includes(res))) errors.push("Invalid resolution");
-    if (video.minAgeRestriction !== null && (typeof video.minAgeRestriction !== "number" || video.minAgeRestriction < 1 || video.minAgeRestriction > 18)) errors.push("Incorrect minAgeRestriction");
-    if (video.publicationDate && isNaN(Date.parse(video.publicationDate))) errors.push("Invalid publicationDate");
+    if (!video.title || typeof video.title !== "string" || video.title.length > 40) {
+        errors.push({ message: "Invalid title", field: "title" });
+    }
+
+    if (!video.author || typeof video.author !== "string" || video.author.length > 20) {
+        errors.push({ message: "Invalid author", field: "author" });
+    }
+
+    if (!video.availableResolutions || !Array.isArray(video.availableResolutions)) {
+        errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
+    } else if (video.availableResolutions.some(res => !validResolutions.includes(res))) {
+        errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
+    }
+
+    if (video.minAgeRestriction !== undefined && video.minAgeRestriction !== null) {
+        if (typeof video.minAgeRestriction !== "number" || video.minAgeRestriction < 1 || video.minAgeRestriction > 18) {
+            errors.push({ message: "Invalid min age restriction", field: "minAgeRestriction" });
+        }
+    }
+
+    if (video.publicationDate && isNaN(Date.parse(video.publicationDate))) {
+        errors.push({ message: "Invalid publication date", field: "publicationDate" });
+    }
 
     return { isValid: errors.length === 0, errors };
 };
+
 
 app.get("/videos", (request:Response, response: Response): void => {
     response.status(200).send(videos);
@@ -126,7 +120,7 @@ app.delete("/videos/:id", (request: Request, response: Response): void => {
 });
 
 app.delete("/testing/all-data", (request:Request, response: Response): void => {
-    videos = [];
+    videos.length =0;
     response.status(204).send();
 });
 
