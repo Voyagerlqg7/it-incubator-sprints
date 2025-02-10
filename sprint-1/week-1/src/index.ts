@@ -36,7 +36,9 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: { mes
         }
     }
 
-    if (video.publicationDate !== undefined && isNaN(Date.parse(video.publicationDate))) {
+    if (video.publicationDate && typeof video.publicationDate !== "string") {
+        errors.push({ message: "Invalid publication date", field: "publicationDate" });
+    } else if (video.publicationDate && isNaN(Date.parse(video.publicationDate))) {
         errors.push({ message: "Invalid publication date", field: "publicationDate" });
     }
 
