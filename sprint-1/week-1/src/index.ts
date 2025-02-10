@@ -84,7 +84,7 @@ app.put("/videos/:id", (request: Request, response: Response): void => {
     }
 
     Object.assign(updateVideoInfo, request.body);
-    response.status(200).send(updateVideoInfo);
+    response.status(204).send(updateVideoInfo);
 });
 
 app.post("/videos", (request: Request, response: Response): void => {
