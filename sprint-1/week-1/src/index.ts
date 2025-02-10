@@ -86,6 +86,28 @@ app.put("/videos/:id", (request: Request, response: Response): void => {
 
 // Создать новое видео
 app.post("/videos", (request: Request, response: Response): void => {
+    const validation = validateVideo(request.body);
+    if (!validation.isValid) {
+        response.status(400).send({ errorsMessage: validation.errors });
+        return;
+    }
+
+    const newVideo: Video = {
+        id: +new Date(),
+        title: request.body.title,
+        author: request.body.author,
+        canBeDownloaded: request.body.canBeDownloaded ?? false,
+        minAgeRestriction: request.body.minAgeRestriction ?? null,
+        createdAt: new Date().toISOString(),
+        publicationDate: request.body.publicationDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        availableResolutions: request.body.availableResolutions,
+    };
+
+    videos.push(newVideo);
+    response.status(201).send(newVideo);
+});
+
+app.delete("/videos/:id", (request: Request, response: Response): void => {
 
 });
 
