@@ -2,21 +2,23 @@ import express from "express";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
 
-
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 6419;
+
 app.use(express.json());
+
 type Video = {
     id?: number;
     title: string;
     author: string;
     canBeDownloaded?: boolean;
-    minAgeRestriction?: number | null; // Учитываем null
+    minAgeRestriction?: number | null;
     createdAt?: string;
     publicationDate?: string;
     availableResolutions: string[];
 };
+
 export let videos: Video[] = [
     {
         id: 0,
@@ -32,18 +34,25 @@ export let videos: Video[] = [
 
 const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
+    const validResolutions = ["P144", "P240", "P360", "P480", "P720", "P1080", "P1440", "P2160"];
+
     if (!video.title || typeof video.title !== "string" || video.title.length > 40) errors.push("Incorrect title");
     if (!video.author || typeof video.author !== "string" || video.author.length > 20) errors.push("Incorrect author");
-    if (!video.availableResolutions || !Array.isArray(video.availableResolutions) || video.availableResolutions.length === 0) errors.push("Incorrect resolutions");
+    if (!video.availableResolutions || !Array.isArray(video.availableResolutions)) errors.push("Incorrect resolutions");
+    if (video.availableResolutions && video.availableResolutions.some(res => !validResolutions.includes(res))) errors.push("Invalid resolution");
     if (video.minAgeRestriction !== null && (typeof video.minAgeRestriction !== "number" || video.minAgeRestriction < 1 || video.minAgeRestriction > 18)) errors.push("Incorrect minAgeRestriction");
+    if (video.publicationDate && isNaN(Date.parse(video.publicationDate))) errors.push("Invalid publicationDate");
+
     return { isValid: errors.length === 0, errors };
 };
+
 app.get("/videos", (_, response: Response): void => {
     response.status(200).send(videos);
 });
+
 app.get("/videos/:id", (request: Request, response: Response): void => {
     const videoId: number = +request.params.id;
-    if (isNaN(videoId) || videoId < 0) {
+    if (isNaN(videoId)) {
         response.status(400).send({ message: "Invalid video ID" });
         return;
     }
@@ -57,8 +66,8 @@ app.get("/videos/:id", (request: Request, response: Response): void => {
 });
 
 app.put("/videos/:id", (request: Request, response: Response): void => {
-    const videoId:number = +request.params.id;
-    if (isNaN(videoId) || videoId < 0) {
+    const videoId: number = +request.params.id;
+    if (isNaN(videoId)) {
         response.status(400).send({ message: "Invalid video ID" });
         return;
     }
@@ -100,10 +109,10 @@ app.post("/videos", (request: Request, response: Response): void => {
     videos.push(newVideo);
     response.status(201).send(newVideo);
 });
-// Delete by ID
+
 app.delete("/videos/:id", (request: Request, response: Response): void => {
-    const videoId:number = +request.params.id;
-    const videoIndex:number = videos.findIndex((video) => video.id === videoId);
+    const videoId: number = +request.params.id;
+    const videoIndex: number = videos.findIndex((video) => video.id === videoId);
 
     if (videoIndex === -1) {
         response.status(404).send({ message: "Video not found" });
@@ -117,6 +126,12 @@ app.delete("/videos/:id", (request: Request, response: Response): void => {
 app.delete("/testing/all-data", (_, response: Response): void => {
     videos = [];
     response.status(204).send();
+});
+
+// Обработка ошибок
+app.use((err: Error, req: Request, res: Response, next: Function) => {
+    console.error(err.stack);
+    res.status(500).send("Something broke!");
 });
 
 // Запуск сервера
