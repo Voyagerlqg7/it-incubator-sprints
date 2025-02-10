@@ -4,7 +4,6 @@ import { Request, Response } from "express";
 export const app = express();
 const port = process.env.PORT || 6419;
 
-// Тип для видео
 type Video = {
     id?: number;
     title: string;
@@ -15,8 +14,6 @@ type Video = {
     publicationDate?: string;
     availableResolutions: string[];
 };
-
-// Инициализация массива видео
 export let videos: Video[] = [
     {
         id: 0,
@@ -40,11 +37,9 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: strin
     if (video.minAgeRestriction !== null && (typeof video.minAgeRestriction !== "number" || video.minAgeRestriction < 1 || video.minAgeRestriction > 18)) errors.push("Incorrect minAgeRestriction");
     return { isValid: errors.length === 0, errors };
 };
-// Получить все видео
 app.get("/videos", (_, response: Response): void => {
     response.status(200).send(videos);
 });
-// Получить видео по ID
 app.get("/videos/:id", (request: Request, response: Response): void => {
     const videoId: number = +request.params.id;
     if (isNaN(videoId) || videoId < 0) {
@@ -60,7 +55,6 @@ app.get("/videos/:id", (request: Request, response: Response): void => {
     }
 });
 
-// Обновить видео по ID
 app.put("/videos/:id", (request: Request, response: Response): void => {
     const videoId:number = +request.params.id;
     if (isNaN(videoId) || videoId < 0) {
@@ -84,7 +78,6 @@ app.put("/videos/:id", (request: Request, response: Response): void => {
     response.status(200).send(updateVideoInfo);
 });
 
-// Создать новое видео
 app.post("/videos", (request: Request, response: Response): void => {
     const validation = validateVideo(request.body);
     if (!validation.isValid) {
@@ -106,7 +99,7 @@ app.post("/videos", (request: Request, response: Response): void => {
     videos.push(newVideo);
     response.status(201).send(newVideo);
 });
-
+// Delete by ID
 app.delete("/videos/:id", (request: Request, response: Response): void => {
     const videoId:number = +request.params.id;
     const videoIndex:number = videos.findIndex((video) => video.id === videoId);
@@ -120,9 +113,9 @@ app.delete("/videos/:id", (request: Request, response: Response): void => {
     response.status(204).send();
 });
 
-// Удалить все данные
 app.delete("/testing/all-data", (_, response: Response): void => {
-
+    videos = [];
+    response.status(204).send();
 });
 
 // Запуск сервера
