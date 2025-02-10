@@ -62,7 +62,26 @@ app.get("/videos/:id", (request: Request, response: Response): void => {
 
 // Обновить видео по ID
 app.put("/videos/:id", (request: Request, response: Response): void => {
+    const videoId:number = +request.params.id;
+    if (isNaN(videoId) || videoId < 0) {
+        response.status(400).send({ message: "Invalid video ID" });
+        return;
+    }
 
+    const validation = validateVideo(request.body);
+    if (!validation.isValid) {
+        response.status(400).send({ errorsMessage: validation.errors });
+        return;
+    }
+
+    const updateVideoInfo = videos.find((item) => item.id === videoId);
+    if (!updateVideoInfo) {
+        response.status(404).send({ message: "Video not found" });
+        return;
+    }
+
+    Object.assign(updateVideoInfo, request.body);
+    response.status(200).send(updateVideoInfo);
 });
 
 // Создать новое видео
