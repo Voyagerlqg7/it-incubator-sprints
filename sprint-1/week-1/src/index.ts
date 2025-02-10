@@ -1,7 +1,10 @@
 import express from "express";
+import dotenv from "dotenv";
 import { Request, Response } from "express";
 
-export const app = express();
+
+dotenv.config();
+const app = express();
 const port = process.env.PORT || 6419;
 app.use(express.json());
 type Video = {
@@ -118,5 +121,7 @@ app.delete("/testing/all-data", (_, response: Response): void => {
 
 // Запуск сервера
 app.listen(port, () => {
-    console.log("Example app listening on port", port);
+    console.log(`Server is running on port ${port}`);
 });
+
+export default app;
