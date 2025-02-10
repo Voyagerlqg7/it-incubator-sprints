@@ -22,10 +22,12 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: { mes
         errors.push({ message: "Invalid author", field: "author" });
     }
 
-    if (!video.availableResolutions || !Array.isArray(video.availableResolutions)) {
-        errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
-    } else if (video.availableResolutions.some(res => !validResolutions.includes(res))) {
-        errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
+    if (video.availableResolutions !== undefined) {
+        if (!Array.isArray(video.availableResolutions)) {
+            errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
+        } else if (video.availableResolutions.some(res => !validResolutions.includes(res))) {
+            errors.push({ message: "Invalid available resolutions", field: "availableResolutions" });
+        }
     }
 
     if (video.minAgeRestriction !== undefined && video.minAgeRestriction !== null) {
@@ -34,12 +36,13 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: { mes
         }
     }
 
-    if (video.publicationDate && isNaN(Date.parse(video.publicationDate))) {
+    if (video.publicationDate !== undefined && isNaN(Date.parse(video.publicationDate))) {
         errors.push({ message: "Invalid publication date", field: "publicationDate" });
     }
 
     return { isValid: errors.length === 0, errors };
 };
+
 
 
 app.get("/videos", (request:Response, response: Response): void => {
@@ -86,8 +89,9 @@ app.put("/videos/:id", (request: Request, response: Response): void => {
 
 app.post("/videos", (request: Request, response: Response): void => {
     const validation = validateVideo(request.body);
+
     if (!validation.isValid) {
-        response.status(400).send({ errorsMessage: validation.errors });
+        response.status(400).send({ errorsMessages: validation.errors });
         return;
     }
 
@@ -98,8 +102,8 @@ app.post("/videos", (request: Request, response: Response): void => {
         canBeDownloaded: request.body.canBeDownloaded ?? false,
         minAgeRestriction: request.body.minAgeRestriction ?? null,
         createdAt: new Date().toISOString(),
-        publicationDate: request.body.publicationDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        availableResolutions: request.body.availableResolutions,
+        publicationDate: request.body.publicationDate ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        availableResolutions: request.body.availableResolutions ?? [],
     };
 
     videos.push(newVideo);
