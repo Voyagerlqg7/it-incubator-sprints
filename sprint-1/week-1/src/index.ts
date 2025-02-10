@@ -76,7 +76,7 @@ app.put("/videos/:id", (request: Request, response: Response): void => {
 
     const validation = validateVideo(request.body);
     if (!validation.isValid) {
-        response.status(400).send({ errorsMessage: validation.errors });
+        response.status(400).send({ errorsMessages: validation.errors });
         return;
     }
 
