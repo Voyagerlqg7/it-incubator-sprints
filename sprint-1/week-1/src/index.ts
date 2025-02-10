@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 export const app = express();
 const port = process.env.PORT || 6419;
-
+app.use(express.json());
 type Video = {
     id?: number;
     title: string;
@@ -26,8 +26,6 @@ export let videos: Video[] = [
         availableResolutions: ["P144"],
     },
 ];
-
-app.use(express.json());
 
 const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
