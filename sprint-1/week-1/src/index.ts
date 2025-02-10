@@ -40,6 +40,9 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: { mes
         errors.push({ message: "Invalid publication date", field: "publicationDate" });
     }
 
+    if (video.canBeDownloaded !== undefined && typeof video.canBeDownloaded !== "boolean") {
+        errors.push({ message: "Invalid canBeDownloaded", field: "canBeDownloaded" });
+    }
     return { isValid: errors.length === 0, errors };
 };
 
