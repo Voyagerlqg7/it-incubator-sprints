@@ -108,12 +108,16 @@ app.post("/videos", (request: Request, response: Response): void => {
 });
 
 app.delete("/videos/:id", (request: Request, response: Response): void => {
+    const videoId:number = +request.params.id;
+    const videoIndex:number = videos.findIndex((video) => video.id === videoId);
 
-});
+    if (videoIndex === -1) {
+        response.status(404).send({ message: "Video not found" });
+        return;
+    }
 
-// Удалить видео по ID
-app.delete("/videos/:id", (request: Request, response: Response): void => {
-
+    videos.splice(videoIndex, 1);
+    response.status(204).send();
 });
 
 // Удалить все данные
