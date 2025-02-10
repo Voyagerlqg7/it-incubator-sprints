@@ -1,7 +1,7 @@
 import express from "express";
 import { Request, Response } from "express";
 
-const app = express();
+export const app = express();
 const port = process.env.PORT || 6419;
 
 // Тип для видео
