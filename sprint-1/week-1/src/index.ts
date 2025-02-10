@@ -1,5 +1,5 @@
-import express from "express";
-import dotenv from "dotenv";
+const express = require("express");
+const dotenv = require("dotenv");
 import { Request, Response } from "express";
 
 dotenv.config();
@@ -7,6 +7,8 @@ const app = express();
 const port = process.env.PORT || 6419;
 
 app.use(express.json());
+
+
 
 type Video = {
     id?: number;
@@ -46,7 +48,7 @@ const validateVideo = (video: Partial<Video>): { isValid: boolean; errors: strin
     return { isValid: errors.length === 0, errors };
 };
 
-app.get("/videos", (_, response: Response): void => {
+app.get("/videos", (request:Response, response: Response): void => {
     response.status(200).send(videos);
 });
 
@@ -123,7 +125,7 @@ app.delete("/videos/:id", (request: Request, response: Response): void => {
     response.status(204).send();
 });
 
-app.delete("/testing/all-data", (_, response: Response): void => {
+app.delete("/testing/all-data", (request:Request, response: Response): void => {
     videos = [];
     response.status(204).send();
 });
